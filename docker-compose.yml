@@ -1,68 +1,96 @@
-version: "3"
+version: "3.8"
+
+networks:
+  app-network:
+    driver: bridge
+
 services:
-  # Web server
+  # Web App 1
+  web1:
+    container_name: web1
+    build:
+      dockerfile: Dockerfile
+      args:
+        - ID=1
+    ports:
+      - "8000:80"
+    volumes:
+      - web1-data:/var/www/html
+    networks:
+      - app-network
+
+  # Web App 2
+  web2:
+    container_name: web2
+    build:
+      dockerfile: Dockerfile
+      args:
+        - ID=2
+    ports:
+      - "8001:80"
+    volumes:
+      - web2-data:/var/www/html
+    networks:
+      - app-network
+
+  # Web Server 1
   server1:
     image: nginx:latest
+    container_name: server1
     restart: always
     ports:
       - "3000:80"
     depends_on:
       - web1
     volumes:
-      - ./web/1:/var/www/html
+      - web1-data:/var/www/html
+      - ./nginx/nginx1.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - app-network
 
+  # Web Server 2
   server2:
     image: nginx:latest
+    container_name: server2
     restart: always
     ports:
       - "3002:80"
     depends_on:
       - web2
     volumes:
-      - ./web/2:/var/www/html
+      - web2-data:/var/www/html
+      - ./nginx/nginx2.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - app-network
 
-  #Web App
-  web1:
-    build: .
+  # Database
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: laravel
+    networks:
+      - app-network
+
+  # Database Manager (phpMyAdmin)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: db
+      PMA_USER: laravel
+      PMA_PASSWORD: laravel
     ports:
       - "8080:80"
-    volumes:
-      - ./Resources/welcome-server1.blade.php:/var/www/html/resources/views/welcome.blade.php
-      - ./web/1:/var/www/html
-
-  web2:
-    build: .
-    ports:
-      - "8082:80"
-    volumes:
-      - ./Resources/welcome-server2.blade.php:/var/www/html/resources/views/welcome.blade.php
-      - ./web/2:/var/www/html
-
-  #Database
-  database:
-    image: postgres:latest
-    restart: always
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=uerPwd
-      - POSTGRES_ROOT_PASSWORD=RootPwd
-      - POSTGRES_DB=TPFinal
-    ports:
-      - "5432:5432"
-    volumes:
-      - psql-data:/var/lib/postgresql/data
-
-  #Database Manager
-  phpmyadmin:
-    image: phpmyadmin
-    restart: always
-    environment:
-      PMA_ARBITRARY: 1
-      PMA_HOST: psql
-      PMA_USER: user
-      PMA_PASSWORD: userPwd
-    ports:
-      - "80:80"
+    networks:
+      - app-network
 
 volumes:
-  psql-data:
+    web2-data:
+    web1-data:
