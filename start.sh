@@ -1,3 +1,4 @@
+chmod -R 777 /storage
 composer install
 npm install
 npm run build
