@@ -12,6 +12,9 @@ services:
       dockerfile: Dockerfile
       args:
         - ID=1
+    depends_on:
+      - db
+      - phpmyadmin
     ports:
       - "8000:80"
     volumes:
@@ -26,6 +29,9 @@ services:
       dockerfile: Dockerfile
       args:
         - ID=2
+    depends_on:
+      - db
+      - phpmyadmin
     ports:
       - "8001:80"
     volumes:
@@ -92,5 +98,5 @@ services:
       - app-network
 
 volumes:
-    web2-data:
-    web1-data:
+  web2-data:
+  web1-data:
